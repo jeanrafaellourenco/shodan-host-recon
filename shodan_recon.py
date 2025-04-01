@@ -41,12 +41,27 @@ for row in general_table:
     cols = row.find_all("td")
     if len(cols) == 2:
         key = cols[0].get_text(strip=True)
-        value = cols[1].get_text(strip=True)
-        general_info[key] = value
+        if key == "Hostnames":
+            raw = cols[1].decode_contents()
+            raw_hostnames = raw.split("<br/>")
+            hostnames = []
+            for h in raw_hostnames:
+                clean = re.sub(r"<.*?>", "", h).strip()
+                if clean:
+                    hostnames.append(clean)
+            general_info[key] = hostnames
+        else:
+            value = cols[1].get_text(strip=True)
+            general_info[key] = value
 
 output += "[General Info]\n"
 for k, v in general_info.items():
-    output += f"{k}: {v}\n"
+    if isinstance(v, list):
+        output += f"{k}:\n"
+        for item in v:
+            output += f"  - {item}\n"
+    else:
+        output += f"{k}: {v}\n"
 output += "\n"
 
 # --- Domains ---
