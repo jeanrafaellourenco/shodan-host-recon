@@ -39,13 +39,13 @@ pip install requests beautifulsoup4 rich
 Você pode passar o IP diretamente como argumento:
 
 ```bash
-python shodan_recon.py 37.59.174.225
+python3 shodan_recon.py 37.59.174.225
 ```
 
 Ou, se não passar, ele perguntará:
 
 ```bash
-$ python shodan_recon.py
+$ python3 shodan_recon.py
 Digite o IP: 37.59.174.225
 ```
 
