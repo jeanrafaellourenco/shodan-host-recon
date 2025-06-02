@@ -19,7 +19,9 @@ if not IP or not re.match(r"^(?:\d{1,3}\.){3}\d{1,3}$", IP):
     exit()
 
 URL = f"https://www.shodan.io/host/{IP}"
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"}
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+}
 
 # === Requisição ===
 response = requests.get(URL, headers=HEADERS)
@@ -35,24 +37,20 @@ output += "=" * 40 + "\n\n"
 
 # --- General Info ---
 general_info = {}
-general_table = soup.select("h1#general + table tr")
 
-for row in general_table:
-    cols = row.find_all("td")
-    if len(cols) == 2:
-        key = cols[0].get_text(strip=True)
-        if key == "Hostnames":
-            raw = cols[1].decode_contents()
-            raw_hostnames = raw.split("<br/>")
-            hostnames = []
-            for h in raw_hostnames:
-                clean = re.sub(r"<.*?>", "", h).strip()
-                if clean:
-                    hostnames.append(clean)
-            general_info[key] = hostnames
-        else:
-            value = cols[1].get_text(strip=True)
-            general_info[key] = value
+# Hostnames
+hostnames = []
+host_label = soup.find("label", string="Hostnames")
+if host_label:
+    div = host_label.find_next_sibling("div")
+    if div:
+        raw = div.decode_contents().split("<br/>")
+        for h in raw:
+            clean = re.sub(r"<.*?>", "", h).strip()
+            if clean:
+                hostnames.append(clean)
+if hostnames:
+    general_info["Hostnames"] = hostnames
 
 output += "[General Info]\n"
 for k, v in general_info.items():
@@ -66,7 +64,7 @@ output += "\n"
 
 # --- Domains ---
 domains = []
-for a in soup.select("td a.button"):
+for a in soup.select("div.domains a.button"):
     text = a.text.strip()
     if text and "." in text:
         domains.append(text)
@@ -80,7 +78,7 @@ for tech in soup.select("#http-components .technology-name"):
         technologies.append(name)
 output += "[Web Technologies]\n" + "\n".join(set(technologies)) + "\n\n"
 
-# --- Vulnerabilities (detalhado) ---
+# --- Vulnerabilities ---
 vulns = {}
 
 m = re.search(r"const VULNS\s*=\s*(\{.*?\});", html, re.DOTALL)
